@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic UPI QR Code Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: auto;
+            flex-direction: column;
+        }
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(8px);
+            z-index: 1;
+            transition: background-image 0.5s ease;
+        }
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .result img {
+            max-width: 150px; /* Adjust QR code size */
+            height: auto;
+            margin-bottom: 10px;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: gray;
+            text-align: center;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const upiInput = document.getElementById("upi_id");
+            const amountInput = document.getElementById("amount");
+            const backgroundDiv = document.getElementById("background");
+
+            // Set initial background to default
+            backgroundDiv.style.backgroundImage = "url('static/images/default.png')";
+
+            // Mapping UPI domains to background images
+            const upiBackgrounds = {
+                "okaxis": "static/images/google_pay.png",
+                "oksbi": "static/images/google_pay.png",
+                "okhdfc": "static/images/google_pay.png",
+                "okicici": "static/images/google_pay.png",
+                "okbizaxis": "static/images/google_pay.png",
+                "axl": "static/images/phonepe.png",
+                "ibl": "static/images/phonepe.png",
+                "ybl": "static/images/phonepe.png",
+                "ptyes": "static/images/paytm.png",
+                "ptaxis": "static/images/paytm.png",
+                "default": "static/images/default.png"
+            };
+
+            function updateBackground() {
+                const upiValue = upiInput.value.trim();
+                const amountValue = amountInput.value.trim();
+
+                if (upiValue && amountValue) {
+                    const domain = upiValue.split("@")[1]; // Extract domain after "@"
+                    if (upiBackgrounds[domain]) {
+                        backgroundDiv.style.backgroundImage = `url('${upiBackgrounds[domain]}')`;
+                    } else {
+                        backgroundDiv.style.backgroundImage = `url('${upiBackgrounds["default"]}')`;
+                    }
+                }
+            }
+
+            // Add event listeners to both fields
+            upiInput.addEventListener("input", updateBackground);
+            amountInput.addEventListener("input", updateBackground);
+        });
+    </script>
+</head>
+<body>
+    <div id="background"></div>
+    <div class="container">
+        <h2>Generate UPI QR Code</h2>
+        <form method="POST">
+            <label for="upi_id">UPI ID:</label>
+            <input type="text" id="upi_id" name="upi_id" placeholder="e.g., 9352360053@ptaxis" required>
+            
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" name="amount" placeholder="e.g., 500" required>
+            
+            <button type="submit">Generate QR Code</button>
+        </form>
+
+        {% if qr_path and upi_link %}
+        <div class="result">
+            <h3>Your QR Code:</h3>
+            <img src="{{ qr_path }}" alt="UPI QR Code">
+            <form action="/redirect" method="get">
+                <input type="hidden" name="upi_link" value="{{ upi_link }}">
+                <button type="submit">Open UPI Link</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <footer>
+            <p>Note: The bank account and IFSC code option has been removed for security reasons to prevent misuse and protect sensitive account details as per UPI safety policies.</p>
+        </footer>
+    </div>
+</body>
+</html>
